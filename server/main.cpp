@@ -6,7 +6,6 @@
 #include <cstdlib>
 
 
-using namespace std;
 //helper function prototypes
 std::string readFile(std::string filePath);
 size_t now();
@@ -46,6 +45,68 @@ struct Model {
                 return readFile("model_output.txt");
         }
 };
+Model load_model_conf(std::string model_name, std::string filepath);
+
+int main(int argc, char** argv)
+{
+  srand(now());
+
+  std::cout << "starting server..." << std::endl;
+
+  size_t file_index = 1;
+  std::string model_name = argc > 2 ? argv[file_index++] : "test";
+  Model model = load_model_conf("test", std::string(".."));
+
+  model.load_ollama();
+  model.warm_up();
+  httplib::Server svr;
+  svr.set_mount_point("/", "./web");
+  svr.Get("/query", [model](const auto &req, auto &res) {
+    
+    std::string response;
+    if (req.has_param("prompt")) {
+      std::string prompt = req.get_param_value("prompt");
+      std::string model_output = model.run(prompt);
+      response += "{\"data\":\"" + model_output + "\", \"error\":\"\"}";
+      res.set_content(response, "text/json");
+      std::cout<<"responding to prompt:\n"<<prompt<<"\nwith output:\n"<<model_output<<"\n";
+    }
+    else
+    {
+        response += "{\"data\":\"\", \"error\":\"Exception, must supply parameter 'prompt'.\"}";
+        res.set_content(response, "text/html");
+    }
+  });
+  svr.Get("/set_context", [&model](const auto &req, auto &res) {
+    //read in template file, parse out two parts
+    //part1 initial part before context
+    //part2 end of file after context
+    if(!req.has_param("ctx"))
+    {
+        res.set_content("{\"error\":\"true\", \"success\":\"false\"}", "text/json");
+        return;
+    }
+    model.context = req.get_param_value("ctx");
+    model.to_file();
+    model.load_ollama();
+    model.warm_up();
+    res.set_content("{\"error\":\"false\", \"success\":\"true\"}", "text/json");
+  });
+  std::cout << "Server running." << std::endl;
+  svr.listen("0.0.0.0", 8080);
+  
+}
+
+size_t now()
+{
+  return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
+std::string readFile(std::string filePath)
+{
+  std::fstream file = std::fstream(filePath);
+  std::string val((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  return val;
+}
 Model load_model_conf(std::string model_name, std::string filepath)
 {
         std::string text = readFile(filepath + PATH_SEPARATOR + model_name);
@@ -78,59 +139,4 @@ Model load_model_conf(std::string model_name, std::string filepath)
         }
         } while(false);
         return model;
-}
-
-int main(int argc, char** argv)
-{
-  srand(now());
-
-  cout << "starting server..." << std::endl;
-
-  size_t file_index = 1;
-  std::string model_name = argc > 2 ? argv[file_index++] : "test";
-  Model model = load_model_conf("test", std::string(".."));
-
-  model.load_ollama();
-
-  std::string warm_up_string = "ollama run ";
-  warm_up_string += model_name;
-  warm_up_string += " \"\"";
-  std::system(warm_up_string.c_str());
-  httplib::Server svr;
-  svr.set_mount_point("/", "./web");
-  svr.Get("/query", [model](const auto &req, auto &res) {
-    
-    string response;
-    if (req.has_param("prompt")) {
-      std::string prompt = req.get_param_value("prompt");
-      std::string model_output = model.run(prompt);
-      response += "{\"data\":\"" + model_output + "\", \"error\":\"\"}";
-      res.set_content(response, "text/json");
-      std::cout<<"responding to prompt:\n"<<prompt<<"\nwith output:\n"<<model_output<<"\n";
-    }
-    else
-    {
-        response += "{\"data\":\"\", \"error\":\"Exception, must supply parameter 'prompt'.\"}";
-        res.set_content(response, "text/html");
-    }
-  });
-  svr.Get("/set_context", [](const auto &req, auto &res) {
-    //read in template file, parse out two parts
-    //part1 initial part before context
-    //part2 end of file after context
-  });
-  cout << "Server running." << std::endl;
-  svr.listen("0.0.0.0", 8080);
-  
-}
-
-size_t now()
-{
-  return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-}
-std::string readFile(std::string filePath)
-{
-  fstream file = fstream(filePath);
-  string val((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-  return val;
 }

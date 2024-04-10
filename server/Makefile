@@ -9,5 +9,5 @@ main: main.o
 # header dependency
 main.o: main.cpp httplib.h CrossPlatform.hpp
 
-run:
+run: main
 	./main
