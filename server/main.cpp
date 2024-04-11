@@ -184,7 +184,7 @@ int main(int argc, char** argv)
     std::string response;
     if (!req.has_param("prompt")) 
     {
-        response += "{\"data\":\"\", \"error\":\"Exception, must supply parameter 'prompt'.\"}\n";
+        response += "{\"data\":\"\", \"error\":\"Exception, must supply parameter 'prompt'.\", \"success\":false }\n";
         res.set_content(response, "text/html");
         return;
     }
@@ -194,36 +194,31 @@ int main(int argc, char** argv)
     std::string model_output = model.run(prompt);
     trim_end(model_output);
     escape_json(model_output);
-    response += "{\"data\":\"" + model_output + "\", \"error\":\"\"}\n";
+    response += "{\"data\":\"" + model_output + "\", \"error\":\"\", \"sucess\":true}\n";
     res.set_content(response, "text/json");
     std::cout<<"responding to prompt:\n"<<prompt<<"\nwith output:\n"<<model_output<<"\n";
   });
   svr.Get("/set_context", [&model](const auto &req, auto &res) {
-    //read in template file, parse out two parts
-    //part1 initial part before context
-    //part2 end of file after context
     if(!req.has_param("ctx"))
     {
-        res.set_content("{\"error\":\"true\", \"success\":\"false\", \"msg\":\"must have param ctx for new model context.\"}\n", "text/json");
+        res.set_content("{ \"error\":\"must have param ctx for new model context.\", \"success\":false }\n", "text/json");
         return;
     }
     model.context = req.get_param_value("ctx");
     model.to_file();
     model.load_ollama();
     model.warm_up();
-    res.set_content("{\"error\":\"false\", \"success\":\"true\"}\n", "text/json");
+    res.set_content("{\"error\":\"\", \"success\":true}\n", "text/json");
   });
   svr.Get("/set_parameter", [&model](const auto &req, auto &res) {
         if(!req.has_param("key") || !req.has_param("value"))
         {
-                res.set_content("{\"error\":\"true\", \"success\":\"false\", \"msg\":\""
-                        "must include parameters key for parameter name, and value for value.\"}\n", "text/json");
+                res.set_content("{\"error\":\"must include parameters key for parameter name, and value for value.\", \"success\":false }\n", "text/json");
                 return;
         }
         if(model.parameters.count(req.get_param_value("key")) == 0)
         {
-                res.set_content("{\"error\":\"true\", \"success\":\"false\", \"msg\":\""
-                        "Error, invalid key: \'" + req.get_param_value("key") + "\'.\"}\n", "text/json");
+                res.set_content("{\"error\":\"Error, invalid key: \'" + req.get_param_value("key") + "\'\", \"success\":false }\n", "text/json");
                 return;
         }
         model.parameters[req.get_param_value("key")] = req.get_param_value("value");
@@ -232,7 +227,7 @@ int main(int argc, char** argv)
         model.load_ollama();
         model.warm_up();
 
-        res.set_content("{\"error\":\"false\", \"success\":\"true\"}\n", "text/json");
+        res.set_content("{\"error\":\"\", \"success\":true}\n", "text/json");
   });
   std::cout << "Server running." << std::endl;
   svr.listen("0.0.0.0", 8080);
