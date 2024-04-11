@@ -10,13 +10,31 @@
 //helper function prototypes
 std::string readFile(std::string filePath);
 size_t now();
+bool is_whitespace(char c)
+{
+        return c == ' ' || c == '\t';
+}
 void skip_whitespace(const std::string& text, size_t& index)
 {
-    while(text.size() > index && (text[index] == ' ' || text[index] == '\t')) index++;
+    while(text.size() > index && is_whitespace(text[index])) index++;
 }
 void skip_non_whitespace(const std::string& text, size_t& index)
 {
     while(text.size() > index && text[index] != ' ' && text[index] != '\t' && text[index] != '\n') index++;
+}
+void trim_end(std::string& text)
+{
+        size_t last = 0, cur = 0;
+        while(cur < text.size())
+        {
+                skip_non_whitespace(text, cur);
+                last = cur;
+                do {
+                        cur++;
+                        skip_whitespace(text, cur);
+                } while(text[cur] == '\n');
+        }
+        text = text.substr(0, last);
 }
 std::string base_model(const std::string& text)
 {
@@ -139,7 +157,9 @@ int main(int argc, char** argv)
     }
 
     std::string prompt = req.get_param_value("prompt");
+    std::cout<<prompt<<"\n";
     std::string model_output = model.run(prompt);
+    trim_end(model_output);
     response += "{\"data\":\"" + model_output + "\", \"error\":\"\"}";
     res.set_content(response, "text/json");
     std::cout<<"responding to prompt:\n"<<prompt<<"\nwith output:\n"<<model_output<<"\n";
