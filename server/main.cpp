@@ -166,6 +166,12 @@ int main(int argc, char** argv)
                         "must include parameters key for parameter name, and value for value.\"}", "text/json");
                 return;
         }
+        if(model.parameters.count(req.get_param_value("key")) == 0)
+        {
+                res.set_content("{\"error\":\"true\", \"success\":\"false\", \"msg\":\""
+                        "Error, invalid key: \'" + req.get_param_value("key") + "\'.\"}", "text/json");
+                return;
+        }
         model.parameters[req.get_param_value("key")] = req.get_param_value("value");
         
         model.to_file();
@@ -193,11 +199,6 @@ Model load_model_conf(std::string model_name, std::string filepath)
 {
         std::string text = readFile(filepath + PATH_SEPARATOR + model_name + ".conf");
         std::cout<<"loading conf file: "<<(filepath + PATH_SEPARATOR + model_name + ".conf")<<"\n";
-        //std::cout<<"From: "<<base_model(text)<<"\n";
-        //for(auto [key, value] : parse_params(text))
-        {
-               //std::cout<<"Param: "<<key<<" = "<<value<<"\n";
-        }
         size_t end_of_initial = text.find("SYSTEM");
         if(end_of_initial == std::string::npos)
                 end_of_initial = text.size();
