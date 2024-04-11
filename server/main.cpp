@@ -131,18 +131,18 @@ int main(int argc, char** argv)
   svr.Get("/query", [model](const auto &req, auto &res) {
     
     std::string response;
-    if (req.has_param("prompt")) {
-      std::string prompt = req.get_param_value("prompt");
-      std::string model_output = model.run(prompt);
-      response += "{\"data\":\"" + model_output + "\", \"error\":\"\"}";
-      res.set_content(response, "text/json");
-      std::cout<<"responding to prompt:\n"<<prompt<<"\nwith output:\n"<<model_output<<"\n";
-    }
-    else
+    if (!req.has_param("prompt")) 
     {
         response += "{\"data\":\"\", \"error\":\"Exception, must supply parameter 'prompt'.\"}";
         res.set_content(response, "text/html");
+        return;
     }
+
+    std::string prompt = req.get_param_value("prompt");
+    std::string model_output = model.run(prompt);
+    response += "{\"data\":\"" + model_output + "\", \"error\":\"\"}";
+    res.set_content(response, "text/json");
+    std::cout<<"responding to prompt:\n"<<prompt<<"\nwith output:\n"<<model_output<<"\n";
   });
   svr.Get("/set_context", [&model](const auto &req, auto &res) {
     //read in template file, parse out two parts
