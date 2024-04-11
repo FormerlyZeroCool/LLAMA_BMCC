@@ -36,6 +36,39 @@ void trim_end(std::string& text)
         }
         text = text.substr(0, last);
 }
+void escape_json(std::string& text)
+{
+        std::string output;
+        for(char c : text)
+        {
+                switch(c) {
+                        case('\"'):
+                                output += "\\\"";
+                                break;
+                        case('\\'):
+                                output += "\\\\";
+                                break;
+                        case('\b'):
+                                output += "\\b";
+                                break;
+                        case('\f'):
+                                output += "\\f";
+                                break;
+                        case('\n'):
+                                output += "\\n";
+                                break;
+                        case('\r'):
+                                output += "\\r";
+                                break;
+                        case('\t'):
+                                output += "\\t";
+                                break;
+                        default:
+                                output += c;
+                }
+        }
+        text = output;
+}
 std::string base_model(const std::string& text)
 {
         size_t start_name = text.find("FROM");
@@ -160,6 +193,7 @@ int main(int argc, char** argv)
     std::cout<<prompt<<"\n";
     std::string model_output = model.run(prompt);
     trim_end(model_output);
+    escape_json(model_output);
     response += "{\"data\":\"" + model_output + "\", \"error\":\"\"}\n";
     res.set_content(response, "text/json");
     std::cout<<"responding to prompt:\n"<<prompt<<"\nwith output:\n"<<model_output<<"\n";
