@@ -4,21 +4,88 @@
 #include <string>
 #include <fstream>
 #include <cstdlib>
+#include <map>
 
 
 //helper function prototypes
 std::string readFile(std::string filePath);
 size_t now();
+void skip_whitespace(const std::string& text, size_t& index)
+{
+    while(text.size() > index && (text[index] == ' ' || text[index] == '\t')) index++;
+}
+void skip_non_whitespace(const std::string& text, size_t& index)
+{
+    while(text.size() > index && text[index] != ' ' && text[index] != '\t' && text[index] != '\n') index++;
+}
+std::string base_model(const std::string& text)
+{
+        size_t start_name = text.find("FROM");
+        if(start_name == std::string::npos)
+                return std::string();
+        start_name += strlen("FROM");
+        skip_whitespace(text, start_name);
+        size_t end_name = start_name;
+        skip_non_whitespace(text, end_name);
+        return text.substr(start_name, end_name - start_name);
+}
+std::map<std::string, std::string> parse_params(const std::string& text)
+{
+        size_t index = 0;
+        std::map<std::string, std::string> params;
+        while(index < text.size())
+        {
+                index = text.find("PARAMETER", index);
+                if(index == std::string::npos)
+                        break;
+                index += strlen("PARAMETER");
+                skip_whitespace(text, index);
+                const size_t start_key = index;
+                skip_non_whitespace(text, index);
+                if(index >= text.size())
+                        break;
+                const size_t end_key = index;
+                skip_whitespace(text, index);
+                if(index >= text.size())
+                        break;
+                const size_t start_value = index;
+                skip_non_whitespace(text, index);  
+                if(index >= text.size())
+                        break;
+                params[text.substr(start_key, end_key - start_key)] = text.substr(start_value, index - start_value);
+        }
+        return params;
+}
 struct Model {
         std::string model_name = "test";
-        std::string initial_text;
         std::string context;
         std::string filepath;
-        Model(std::string initial_text, std::string filepath): initial_text(initial_text), filepath(filepath){}
+        std::string from_model;
+        std::map<std::string, std::string> parameters;
+        Model(std::string filepath): filepath(filepath){}
         void to_file() const 
         {
-                std::fstream file(filepath + PATH_SEPARATOR + model_name + ".conf");
-                file << initial_text << "\"\"\"" << context << "\"\"\"";
+                std::fstream file(filepath + PATH_SEPARATOR + model_name + ".conf", std::ios::out | std::ios::trunc);
+                file << to_string();
+        }
+        std::string to_string() const
+        {
+                std::string text;
+                text += "FROM ";
+                text += from_model;
+                text += "\n";
+                for(auto &[key, value] : parameters)
+                {
+                        text += "PARAMETER ";
+                        text += key;
+                        text += " ";
+                        text += value;
+                        text += "\n";
+                }
+                text += "\nSYSTEM \"\"\"";
+                text += context;
+                text += "\"\"\"\n";
+                return text;
         }
         void load_ollama() const
         {
@@ -83,7 +150,7 @@ int main(int argc, char** argv)
     //part2 end of file after context
     if(!req.has_param("ctx"))
     {
-        res.set_content("{\"error\":\"true\", \"success\":\"false\"}", "text/json");
+        res.set_content("{\"error\":\"true\", \"success\":\"false\", \"msg\":\"must have param ctx for new model context.\"}", "text/json");
         return;
     }
     model.context = req.get_param_value("ctx");
@@ -91,6 +158,21 @@ int main(int argc, char** argv)
     model.load_ollama();
     model.warm_up();
     res.set_content("{\"error\":\"false\", \"success\":\"true\"}", "text/json");
+  });
+  svr.Get("/set_parameter", [&model](const auto &req, auto &res) {
+        if(!req.has_param("key") || !req.has_param("value"))
+        {
+                res.set_content("{\"error\":\"true\", \"success\":\"false\", \"msg\":\""
+                        "must include parameters key for parameter name, and value for value.\"}", "text/json");
+                return;
+        }
+        model.parameters[req.get_param_value("key")] = req.get_param_value("value");
+        
+        model.to_file();
+        model.load_ollama();
+        model.warm_up();
+
+        res.set_content("{\"error\":\"false\", \"success\":\"true\"}", "text/json");
   });
   std::cout << "Server running." << std::endl;
   svr.listen("0.0.0.0", 8080);
@@ -109,12 +191,20 @@ std::string readFile(std::string filePath)
 }
 Model load_model_conf(std::string model_name, std::string filepath)
 {
-        std::string text = readFile(filepath + PATH_SEPARATOR + model_name);
+        std::string text = readFile(filepath + PATH_SEPARATOR + model_name + ".conf");
+        std::cout<<"loading conf file: "<<(filepath + PATH_SEPARATOR + model_name + ".conf")<<"\n";
+        //std::cout<<"From: "<<base_model(text)<<"\n";
+        //for(auto [key, value] : parse_params(text))
+        {
+               //std::cout<<"Param: "<<key<<" = "<<value<<"\n";
+        }
         size_t end_of_initial = text.find("SYSTEM");
         if(end_of_initial == std::string::npos)
                 end_of_initial = text.size();
-        Model model(text.substr(0, end_of_initial), filepath);
+        Model model(filepath);
         model.model_name = std::move(model_name);
+        model.from_model = base_model(text);
+        model.parameters = parse_params(text);
         do {
         if(end_of_initial < text.size())
         {
@@ -138,5 +228,6 @@ Model load_model_conf(std::string model_name, std::string filepath)
                 model.context = text.substr(start_of_ctx, end_of_ctx - start_of_ctx);
         }
         } while(false);
+        std::cout<<"loaded model:\n"<<model.to_string()<<"\n";
         return model;
 }
