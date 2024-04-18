@@ -131,5 +131,90 @@ GET /set_parameter?key=exampleKey&value=exampleValue
       "success": false
     }
 
+### Endpoint Documentation: `/set_base_model`
+
+This endpoint is responsible for setting the base model to be used by the system. It accepts a single query parameter, `model`, which specifies the name of the base model to be set. The endpoint then loads the corresponding model configuration, updates the system's configuration accordingly, and returns information about the selected base model.
+
+#### Method: GET
+
+#### URL Parameters:
+- `model` (string): The name of the base model to be set.
+
+#### Success Response:
+- **Code:** 200 OK
+- **Content:**
+  ```json
+  {
+    "info": "Model: phi, Parameters: 2.7B, Size: 1.7GB",
+    "error": "",
+    "success": true
+  }
+  ```
+
+#### Error Responses:
+1. **Missing Parameter Model:**
+   - **Code:** 400 Bad Request
+   - **Content:**
+     ```json
+     {
+       "error": "must include parameter model",
+       "success": false
+     }
+     ```
+   - **Details:** This error occurs when the `model` parameter is not provided in the request. The parameter is mandatory for setting the base model.
+
+2. **Invalid Model Name:**
+   - **Code:** 400 Bad Request
+   - **Content:**
+     ```json
+     {
+       "error": "Error, invalid model name: '[model_name]'",
+       "success": false
+     }
+     ```
+   - **Details:** This error indicates that the provided `model` parameter does not match any valid base model names. It's essential to specify a valid model name to set the base model correctly.
+
+#### Examples:
+- **Valid Input:**
+  - **Request:**
+    ```
+    GET /set_base_model?model=phi
+    ```
+  - **Expected Output:**
+    ```json
+    {
+      "info": "Model: phi, Parameters: 2.7B, Size: 1.7GB",
+      "error": "",
+      "success": true
+    }
+    ```
+
+- **Invalid Input 1 (Missing Model Parameter):**
+  - **Request:**
+    ```
+    GET /set_base_model
+    ```
+  - **Expected Output:**
+    ```json
+    {
+      "error": "must include parameter model",
+      "success": false
+    }
+    ```
+
+- **Invalid Input 2 (Invalid Model Name):**
+  - **Request:**
+    ```
+    GET /set_base_model?model=invalid_model
+    ```
+  - **Expected Output:**
+    ```json
+    {
+      "error": "Error, invalid model name: 'invalid_model'",
+      "success": false
+    }
+    ```
+
+
 ## What's next?
 Check out the INSTALL_README.md to install the necessary software to run this project on windows, and feel free to refer back to this at any time for how to interact with this service when it is running.
