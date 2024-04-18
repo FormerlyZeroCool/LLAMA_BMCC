@@ -5,6 +5,8 @@
 #include <fstream>
 #include <cstdlib>
 #include <map>
+#include <variant>
+#include <cctype>
 
 
 //helper function prototypes
@@ -79,6 +81,116 @@ std::string base_model(const std::string& text)
         size_t end_name = start_name;
         skip_non_whitespace(text, end_name);
         return text.substr(start_name, end_name - start_name);
+}
+
+bool is_int(std::string& text)
+{
+        size_t i = text[0] == '-';
+        bool is_int = true;
+        while(i < text.size() && is_int) 
+                is_int = isdigit(text[i++]);
+        return is_int;
+}
+bool is_float(std::string& text)
+{
+        size_t i = text[0] == '-';
+        bool is_float = true, is_beg = true;
+        while(i < text.size() && is_float)
+        {
+                if(is_beg && text[i] == '.')
+                {
+                        is_beg = false;
+                }
+                else if(!isdigit(text[i]))
+                        is_float = false;
+                i++;
+        }
+        return is_float;
+}
+
+struct ParamType {
+        enum param_type {null, integer, real, text} type;
+        std::string description;
+        ParamType(): type(param_type::null){}
+        ParamType(std::string type_str, std::string desc): type(param_type::null), description(desc) 
+        {
+                if(type_str == "int")
+                        type = param_type::integer;
+                else if(type_str == "float")
+                        type = param_type::real;
+                else if(type_str == "string")
+                        type = param_type::text;
+        }
+        bool is_valid(std::string value)
+        {
+                switch(type) {
+                        case(param_type::integer):
+                               return is_int(value);
+                        case(param_type::real):
+                                return is_float(value);
+                        case(param_type::text):
+                                return true;
+                        default: return false;
+                }
+        }
+        std::string to_string()
+        { 
+                switch(type) {
+                        case(param_type::integer):
+                                return "Integer";
+                        case(param_type::real):
+                                return "Float";
+                        case(param_type::text):
+                                return "String";
+                        default:
+                                return "Null";
+                }
+        }
+        friend std::ostream& operator<<(std::ostream& o, ParamType& pt)
+        {
+                o << pt.to_string();
+                return o;
+        }
+};
+std::string substr(std::string& text, size_t start, size_t end)
+{
+        return text.substr(start, end - start);
+}
+std::map<std::string, ParamType> parse_param_types(std::string config)
+{
+        std::map<std::string, ParamType> types;
+        size_t i = 0;
+        while(i < config.size())
+        {
+                const size_t name_start = i;
+                skip_non_whitespace(config, i);
+                const size_t name_end = i;
+                skip_whitespace(config, i);
+                
+                const size_t type_start = i;
+                skip_non_whitespace(config, i);
+                const size_t type_end = i;
+
+                skip_whitespace(config, i);
+                
+                if(i >= config.size() || config[i] == '\n')
+                {
+                        i++; 
+                        types[substr(config, name_start, name_end)] =
+                                ParamType(substr(config, type_start, type_end), "");
+                        continue;
+                }
+                
+                const size_t desc_start = i;
+                while(i < config.size() && config[i] != '\n') i++;
+                const size_t desc_end = i++;
+                std::string type = substr(config, type_start, type_end);
+                std::string desc = substr(config, desc_start, desc_end);
+                ParamType pt = ParamType(type, desc);
+                types[substr(config, name_start, name_end)] = pt;
+                        
+        }
+        return types;
 }
 std::map<std::string, std::string> parse_params(const std::string& text)
 {
@@ -172,6 +284,7 @@ int main(int argc, char** argv)
   std::cout << "starting server..." << std::endl;
 
   size_t file_index = 1;
+  auto type_map = parse_param_types(readFile("./params.types"));
   std::string model_name = argc > 2 ? argv[file_index++] : "test";
   Model model = load_model_conf("test", std::string(".."));
 
@@ -210,17 +323,25 @@ int main(int argc, char** argv)
     model.warm_up();
     res.set_content("{\"error\":\"\", \"success\":true}\n", "text/json");
   });
-  svr.Get("/set_parameter", [&model](const auto &req, auto &res) {
+  svr.Get("/set_parameter", [&model, &type_map](const auto &req, auto &res) {
         if(!req.has_param("key") || !req.has_param("value"))
         {
                 res.set_content("{\"error\":\"must include parameters key for parameter name, and value for value.\", \"success\":false }\n", "text/json");
                 return;
         }
-        if(model.parameters.count(req.get_param_value("key")) == 0)
+        if(type_map.count(req.get_param_value("key")) == 0) 
         {
                 res.set_content("{\"error\":\"Error, invalid key: \'" + req.get_param_value("key") + "\'\", \"success\":false }\n", "text/json");
                 return;
         }
+        std::string key = req.get_param_value("key");
+        std::string value = req.get_param_value("value");
+        if(!type_map[key].is_valid(value))
+        {
+                res.set_content("{\"error\":\"Error, invalid value: \'" + value + "\' for parameter: \'" + key + "\' of type: " + type_map[key].to_string() + "\", \"success\":false }\n", "text/json");
+                return;
+        }
+        std::cout << "updating param: " << key << " which is of type: " << type_map[key] << " with value: " << value << "\n";
         model.parameters[req.get_param_value("key")] = req.get_param_value("value");
         
         model.to_file();
