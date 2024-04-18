@@ -11,17 +11,8 @@ This guide provides detailed instructions on how to use the `install.bat` batch 
 ### 1. Running `install.bat`
 The `install.bat` file automates the installation of WSL and the Debian Linux distribution, and runs the `install.sh` script that installs the Ollama application. Here are the included commands:
 
-1. `wsl --install`:
-   - Installs the Windows Subsystem for Linux with the default options, which includes enabling necessary Windows features.
-
-2. `wsl --install -d Debian`:
-   - Installs Debian as the WSL distribution. This command will prompt you to create a default user account for Debian, where you will need to enter a username and password.
-
-3. `wsl install.sh`:
-   - Executes the `install.sh` script within the Debian environment. This script installs Ollama and requires superuser access, hence it will prompt for the sudo password.
-
 ### 2. Executing the Batch File
-- **Right-click** on `install.bat` and select **"Run as administrator"** to start the installation process. Running as administrator is essential as installing WSL requires administrative privileges.
+- **Right-click** on `install.bat` and select **"Run as administrator"** to start the installation process. Running as administrator is essential as installing WSL requires administrative privileges. If you are in windows 11 instead you should just be able to run the bat file by double clicking on it
 
 ### 3. User Interactions
 - **During Debian Installation**: When prompted, enter a username and password for your new Debian user account. These credentials will be used for future sudo operations within Debian.
