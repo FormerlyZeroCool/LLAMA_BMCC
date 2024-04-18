@@ -35,7 +35,8 @@ fetchQueryDirect();
   "data": "I am a virtual assistant designed to help with your queries.",
   "error": "",
   "success": true
-}```
+}
+```
 
 ## Method 2: Using URLSearchParams
 
