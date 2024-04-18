@@ -1,4 +1,4 @@
-# Installation Guide for WSL via `install.bat`
+# Installation Guide for WSL, Debian, ollama, and prerequisite software via `install.bat`
 
 This guide provides detailed instructions on how to use the `install.bat` batch file to install the Windows Subsystem for Linux (WSL) with Debian and to execute a shell script that installs Ollama and requires superuser privileges.
 
