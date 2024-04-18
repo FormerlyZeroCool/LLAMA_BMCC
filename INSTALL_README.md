@@ -34,3 +34,8 @@ After the installation, you can access your Debian WSL environment:
 
 For additional help or more detailed instructions on using WSL, visit the [official Microsoft WSL installation guide](https://docs.microsoft.com/en-us/windows/wsl/install).
 
+## What's next?
+
+If you have successfully completed the instructions please open the project in the wsl terminal byt typing wsl into a terminal, and cding to the appropriate directory
+Then cd into the server directory, and type 'make run' to install, and run
+Then move onto the CURL_README.md, and follow the instructions there to learn how to interact with the web service

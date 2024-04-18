@@ -121,3 +121,5 @@ GET /set_parameter?key=exampleKey&value=exampleValue
       "success": false
     }
 
+## What's next?
+Check out the INSTALL_README.md to install the necessary software to run this project on windows, and feel free to refer back to this at any time for how to interact with this service when it is running.

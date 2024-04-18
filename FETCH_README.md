@@ -1,8 +1,9 @@
 # Comparing Fetch API Implementations for Web Service Interaction
 
+Both methods have their advantages. Direct query strings are simple and more similar to our curl example, while URLSearchParams provides more flexibility and automatic URL encoding.
+
 This document explores two different methods of using the JavaScript Fetch API to interact with a web service hosted on `127.0.0.1:8080`. We'll demonstrate how to use both a direct query string and a JavaScript object with `URLSearchParams` to provide parameters for GET requests. Each method has its benefits, which we will discuss along with providing code examples.
 
-Both methods have their advantages. Direct query strings are simple and more similar to our curl example, while URLSearchParams provides more flexibility and automatic URL encoding. The choice depends on the specific requirements and complexity of the parameters being used.
 
 ## Overview
 
@@ -28,6 +29,7 @@ fetchQueryDirect();
 ```
 
 ### Expected output:
+
 ```json
 {
   "data": "I am a virtual assistant designed to help with your queries.",
@@ -36,9 +38,11 @@ fetchQueryDirect();
 }```
 
 ## Method 2: Using URLSearchParams
+
 URLSearchParams provides a more flexible and robust method for handling query parameters. It's particularly useful when dealing with multiple parameters that might require encoding, or when parameters are dynamically generated and manipulated. It also automatically handles URL encoding. In other words you don't have to replace spaces with %20 etc.
 
 ### Example: `/query` Endpoint Using URLSearchParams
+
 ```javascript
 async function fetchQueryURLSearchParams() {
   try {
@@ -52,8 +56,10 @@ async function fetchQueryURLSearchParams() {
 }
 fetchQueryURLSearchParams();
 ```
-```json
+
 ### Expected output:
+
+```json
 {
   "data": "I am a virtual assistant designed to help with your queries.",
   "error": "",
@@ -61,3 +67,10 @@ fetchQueryURLSearchParams();
 }
 ```
 ## Conclusion
+
+Direct query strings are simple and more similar to our curl example, while URLSearchParams provides more flexibility and automatic URL encoding.
+In general you should prefer to use the URLSearchParams, but the goal of showing you this comparison is to see a closer analogue to our previous curl example, and how it translates to Javascript using the Fetch API.  Which is something you can build integrations with this, and other web services into your front ends.
+
+## What's next?
+
+Now you should try to write some javascript code using the fetch api to change the context of the model, and then try to prompt the model qith a new query to compare the changes

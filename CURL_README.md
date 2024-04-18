@@ -76,3 +76,6 @@ curl -X GET "http://127.0.0.1:8080/set_parameter?key=num_ctx&value=ten"
   "success": false
 }
 
+## What's next?
+
+Move on to the FETCH_README.md to see the next series of instructions to follow, or try to send more requests to the web service, and have some fun if you have extra time!
