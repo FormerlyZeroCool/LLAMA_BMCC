@@ -219,6 +219,54 @@ std::map<std::string, std::string> parse_params(const std::string& text)
         }
         return params;
 }
+struct BaseModel {
+        std::string name, params, size;
+        std::string to_string()
+        {
+                std::string str;
+                str += "Model: ";
+                str += name;
+                str += ", Parameters: ";
+                str += params;
+                str += ", Size: ";
+                str += size;
+                return str;
+        }
+};
+std::map<std::string, BaseModel> parse_base_models(std::string config)
+{
+        size_t i = 0;
+        std::map<std::string, BaseModel> map;
+        while(i < config.size())
+        {
+                size_t name_s = i;
+                skip_non_whitespace(config, i);
+                size_t name_e = i;
+                
+                skip_whitespace(config, i);
+                
+                size_t param_s = i;
+                skip_non_whitespace(config, i);
+                size_t param_e = i;
+                
+                skip_whitespace(config, i);
+
+                size_t size_s = i;
+                skip_non_whitespace(config, i);
+                size_t size_e = i;
+                
+                skip_whitespace(config, i);
+
+                BaseModel model;
+                model.name = substr(config, name_s, name_e);
+                model.params = substr(config, param_s, param_e);
+                model.size = substr(config, size_s, size_e);
+                map[model.name] = model;
+                i = config.find('\n', i);
+                i++;
+        }
+        return map;
+}
 struct Model {
         std::string model_name = "test";
         std::string context;
@@ -285,6 +333,7 @@ int main(int argc, char** argv)
 
   size_t file_index = 1;
   auto type_map = parse_param_types(readFile("./params.types"));
+  auto base_models = parse_base_models(readFile("./models.list"));
   std::string model_name = argc > 2 ? argv[file_index++] : "test";
   Model model = load_model_conf("test", std::string(".."));
 
@@ -349,6 +398,34 @@ int main(int argc, char** argv)
         model.warm_up();
 
         res.set_content("{\"error\":\"\", \"success\":true}\n", "text/json");
+  });
+  svr.Get("/set_base_model", [&model, &base_models](const auto &req, auto &res) {
+        if(!req.has_param("model"))
+        {
+                std::string resp = "{\"error\":\"";
+                resp += "must include parameter model";
+                resp += "\", \"success\":false}";
+                res.set_content(resp, "text/json");
+                return;
+        }
+        std::string model_name = req.get_param_value("model");
+        if(base_models.count(model_name) == 0)
+        {
+                std::string resp = "{\"error\":\"";
+                resp += "Error, invalid model name: \'";
+                resp += model_name;
+                resp += "\'";
+                resp += "\", \"success\":false}";
+                res.set_content(resp, "text/json");
+                return;
+        }
+        
+        model.from_model = std::move(model_name);
+        model.to_file();
+        model.load_ollama();
+        model.warm_up();
+        
+        res.set_content(std::string("{\"info\":\"") + base_models[model.from_model].to_string() + "\", \"error\":\"\", \"success\":true}\n", "text/json");
   });
   std::cout << "Server running." << std::endl;
   svr.listen("0.0.0.0", 8080);
