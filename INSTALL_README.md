@@ -1,6 +1,6 @@
-# Installation Guide for WSL, Debian, ollama, and prerequisite software via `install.bat`
+# Installation Guide for WSL, Debian, ollama, and other prerequisite software
 
-This guide provides detailed instructions on how to use the `install.bat` batch file to install the Windows Subsystem for Linux (WSL) with Debian and to execute a shell script that installs Ollama and requires superuser privileges.
+This guide details how to use two separate batch files, `run_first_install.bat` and `run_second_install.bat`, to install the Windows Subsystem for Linux (WSL) with Debian and various tools including ollama.
 
 ## Prerequisites
 - **Operating System**: Windows 10 or later, with updates installed.
@@ -8,34 +8,32 @@ This guide provides detailed instructions on how to use the `install.bat` batch 
 
 ## Steps to Install
 
-### 1. Running `install.bat`
-The `install.bat` file automates the installation of WSL and the Debian Linux distribution, and runs the `install.sh` script that installs the Ollama application. Here are the included commands:
+### 1. Running `run_first_install.bat`
+The `run_first_install.bat` file automates the installation of WSL and the Debian Linux distribution:
+- **Right-click** on `run_first_install.bat` and select **"Run as administrator"** to start the installation process. This is essential as installing WSL requires administrative privileges. Windows 11 users can simply double-click to run the file.
 
-### 2. Executing the Batch File
-- **Right-click** on `install.bat` and select **"Run as administrator"** to start the installation process. Running as administrator is essential as installing WSL requires administrative privileges. If you are in windows 11 instead you should just be able to run the bat file by double clicking on it
+### 2. Running `run_second_install.bat`
+After setting up WSL and Debian, execute `run_second_install.bat` to install necessary tools such as ollama, curl, git, make, g++, gcc, and jq:
+- **Right-click** on `run_second_install.bat` and select **"Run as administrator"**. This step ensures all installations are handled with the necessary permissions.
 
 ### 3. User Interactions
-- **During Debian Installation**: When prompted, enter a username and password for your new Debian user account. These credentials will be used for future sudo operations within Debian.
-  
-- **During Script Execution**: The `install.sh` script will likely prompt you for the sudo password. Enter the password you set up for the Debian user account. This script will proceed to install Ollama.
+- **During Debian Installation**: When prompted, create a username and password for your new Debian user account. This information will be necessary for sudo operations within Debian.
 
 ### 4. Following On-Screen Instructions
-After initiating the batch file, follow any on-screen prompts to complete the setup. These will guide you through the WSL installation, the configuration of Debian, and the installation of Ollama.
+Follow any on-screen prompts to complete the setup through both batch files. These will guide you through the initial WSL and Debian setup and then the installation of the development tools and ollama.
 
 ## Post-Installation
-After the installation, you can access your Debian WSL environment:
+Access your Debian WSL environment:
 - **Via the Start Menu**: Search for "Debian" and open the app.
-- **Via Command Line**: Type `wsl` or `wsl -d Debian` in your command prompt to start interacting with Debian.
+- **Via Command Line**: Enter `wsl` or `wsl -d Debian` in the command prompt to start using Debian.
 
 ## Troubleshooting
-- **WSL Not Recognized**: Confirm that you have the latest Windows updates installed.
-- **Permission Issues**: Ensure you run `install.bat` as an administrator.
-- **Sudo Password Prompts**: Remember that the sudo password is the one you set during the Debian user account creation.
+- **WSL Not Recognized**: Ensure your Windows has the latest updates installed.
+- **Permission Issues**: Confirm you have administrative rights and run both batch files as administrator.
 
-For additional help or more detailed instructions on using WSL, visit the [official Microsoft WSL installation guide](https://docs.microsoft.com/en-us/windows/wsl/install).
+For additional help or more detailed instructions on using WSL, refer to the [official Microsoft WSL installation guide](https://docs.microsoft.com/en-us/windows/wsl/install).
 
 ## What's next?
 
-If you have successfully completed the instructions please open the project in the wsl terminal byt typing wsl into a terminal, and cding to the appropriate directory
-Then cd into the server directory, and type 'make run' to install, and run
-Then move onto the CURL_README.md, and follow the instructions there to learn how to interact with the web service
+After the installation, open the WSL terminal by typing `wsl` into a command prompt, navigate to the project directory, move into the server directory, and type `make run` to compile and run the server. Next, proceed to the `CURL_README.md` to learn how to interact with the web service.
+

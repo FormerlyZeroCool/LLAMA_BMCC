@@ -76,6 +76,43 @@ curl -X GET "http://127.0.0.1:8080/set_parameter?key=num_ctx&value=ten"
   "success": false
 }
 
+## `/set_base_model` Endpoint
+
+**Endpoint Description:**
+Sets the base model to be used by the system.
+
+### Good Input Example
+
+**curl Command:**
+```bash
+curl -X GET "http://127.0.0.1:8080/set_base_model?model=phi"
+```
+
+**Expected Output:**
+```json
+{
+  "info": "Model: phi, Parameters: 2.7B, Size: 1.7GB",
+  "error": "",
+  "success": true
+}
+```
+
+### Bad Input Example
+
+**curl Command:**
+```bash
+curl -X GET "http://127.0.0.1:8080/set_base_model?model=invalid_model"
+```
+
+**Expected Output:**
+```json
+{
+  "error": "Error, invalid model name: 'invalid_model'",
+  "success": false
+}
+```
+
+
 ## What's next?
 
 Move on to the FETCH_README.md to see the next series of instructions to follow, or try to send more requests to the web service, and have some fun if you have extra time!
