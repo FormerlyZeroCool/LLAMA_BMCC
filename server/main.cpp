@@ -267,6 +267,44 @@ std::map<std::string, BaseModel> parse_base_models(std::string config)
         }
         return map;
 }
+std::string jsonify(std::map<std::string, ParamType>& ptypes)
+{
+        std::string json;
+        json += "[";
+        for(auto [name, ptype] : ptypes)
+        {
+                json += "{\"param_name\":\"";
+                json += name;
+                json += "\", \"type\":\"";
+                json += ptype.to_string();
+                json += "\", \"desc\":\"";
+                json += ptype.description;
+                json += "\"},\n";
+        }
+        if(ptypes.size() > 0)
+                json[json.size() - 2] = ' ';
+        json += "]\n";
+        return json;
+}
+std::string jsonify(std::map<std::string, BaseModel>& models)
+{
+        std::string json;
+        json += "[";
+        for(auto [name, model] : models)
+        {
+                json += "{\"model_name\":\"";
+                json += name;
+                json += "\", \"params\":\"";
+                json += model.params;
+                json += "\", \"size\":\"";
+                json += model.size;
+                json += "\"},\n";
+        }
+        if(models.size() > 0)
+                json[json.size() - 2] = ' ';
+        json += "]\n";
+        return json;
+}
 struct Model {
         std::string model_name = "test";
         std::string context;
@@ -426,6 +464,12 @@ int main(int argc, char** argv)
         model.warm_up();
         
         res.set_content(std::string("{\"info\":\"") + base_models[model.from_model].to_string() + "\", \"error\":\"\", \"success\":true}\n", "text/json");
+  });
+  svr.Get("/base_model_options", [&base_models](const auto &req, auto &res) {
+        res.set_content(jsonify(base_models), "text/json");
+  });
+  svr.Get("/model_parameter_options", [&type_map](const auto &req, auto &res) {
+        res.set_content(jsonify(type_map), "text/json");
   });
   std::cout << "Server running." << std::endl;
   svr.listen("0.0.0.0", 8080);
