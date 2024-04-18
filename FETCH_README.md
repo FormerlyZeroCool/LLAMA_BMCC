@@ -30,7 +30,7 @@ fetchQueryDirect();
 
 ### Expected output:
 
-```json
+```javascript
 {
   "data": "I am a virtual assistant designed to help with your queries.",
   "error": "",
@@ -59,7 +59,7 @@ fetchQueryURLSearchParams();
 
 ### Expected output:
 
-```json
+```javascript
 {
   "data": "I am a virtual assistant designed to help with your queries.",
   "error": "",
