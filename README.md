@@ -215,6 +215,36 @@ This endpoint is responsible for setting the base model to be used by the system
     }
     ```
 
+## `/base_model_options` Endpoint
+
+**Endpoint Description:**
+Retrieves a list of available base model options along with their parameters and sizes.
+
+**Example Output (Partial):**
+```json
+[
+  {"model_name":"codellama", "params":"7B", "size":"3.8GB"},
+  {"model_name":"dolphin-phi", "params":"2.7B", "size":"1.6GB"},
+  {"model_name":"gemma:2b", "params":"2B", "size":"4.8GB"},
+  ...
+]
+```
+
+## `/model_parameter_options` Endpoint
+
+**Endpoint Description:**
+Retrieves a list of available model parameter options along with their types and descriptions.
+
+**Example Output (Partial):**
+```json
+[
+  {"param_name":"mirostat", "type":"Integer", "desc":"Enable Mirostat sampling for controlling perplexity."},
+  {"param_name":"mirostat_eta", "type":"Float", "desc":"Influences how quickly the algorithm responds to feedback from the generated text."},
+  {"param_name":"mirostat_tau", "type":"Float", "desc":"Controls the balance between coherence and diversity of the output."},
+  ...
+]
+```
+
 
 ## What's next?
 Check out the INSTALL_README.md to install the necessary software to run this project on windows, and feel free to refer back to this at any time for how to interact with this service when it is running.
