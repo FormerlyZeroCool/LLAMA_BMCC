@@ -1,6 +1,24 @@
 # Web Service Interaction Using `curl`
 
 This document provides examples of how to interact with the web service running on `127.0.0.1:8080` using `curl` commands. Each endpoint is detailed with the appropriate `curl` command and the expected output.
+## First what is curl?
+### Curl Overview
+
+`curl` (Client URL) is a versatile command-line tool used to transfer data to or from a server using a variety of protocols such as HTTP, HTTPS, FTP, FTPS, SCP, SFTP, LDAP, and more. It is widely utilized for testing, developing, and interacting with web APIs or for automating file transfers over network connections.
+
+### Key Features
+
+- **Multiple Protocols**: Supports a wide range of protocols, making it applicable for various network communication tasks.
+- **HTTP Methods**: Facilitates performing requests like GET, POST, PUT, DELETE, and other HTTP methods directly from the command line or within scripts.
+- **Platform Support**: Available on multiple platforms including Windows, macOS, and Linux.
+- **Advanced Features**: Offers capabilities such as user authentication, header manipulation, form submissions, and cookie handling.
+
+### Common Uses
+
+- **API Testing**: Frequently used in development environments to test API endpoints before their integration into applications.
+- **Scripting and Automation**: Useful for scripting interactions with web services in both development and production environments.
+
+`curl` is recognized for its robustness and flexibility, making it an essential tool for developers and system administrators for both simple and complex network interactions.
 
 ## `/query` Endpoint
 
