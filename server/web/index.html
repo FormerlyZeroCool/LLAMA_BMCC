@@ -98,8 +98,14 @@
                 })
                 .catch(error => console.error('Error:', error));
         }
-
+        let show_base_model_options = false;
         function getBaseModelOptions() {
+            show_base_model_options = !show_base_model_options;
+            if(!show_base_model_options)
+            {
+                document.getElementById('baseModelOptions').innerHTML = '';
+                return;
+            }
             fetch(`/base_model_options`)
                 .then(response => response.json())
                 .then(data => {
@@ -128,8 +134,14 @@
                 })
                 .catch(error => console.error('Error:', error));
         }
-
+        let show_model_parameter_options = false;
         function getModelParameterOptions() {
+            show_model_parameter_options = !show_model_parameter_options;
+            if(!show_model_parameter_options)
+            {
+                document.getElementById('modelParameterOptions').innerHTML = '';
+                return;
+            }
             fetch(`/model_parameter_options`)
                 .then(response => response.json())
                 .then(data => {
