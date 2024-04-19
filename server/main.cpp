@@ -12,101 +12,17 @@
 //helper function prototypes
 std::string readFile(std::string filePath);
 size_t now();
-bool is_whitespace(char c)
-{
-        return c == ' ' || c == '\t';
-}
-void skip_whitespace(const std::string& text, size_t& index)
-{
-    while(text.size() > index && is_whitespace(text[index])) index++;
-}
-void skip_non_whitespace(const std::string& text, size_t& index)
-{
-    while(text.size() > index && text[index] != ' ' && text[index] != '\t' && text[index] != '\n') index++;
-}
-void trim_end(std::string& text)
-{
-        size_t last = 0, cur = 0;
-        while(cur < text.size())
-        {
-                skip_non_whitespace(text, cur);
-                last = cur;
-                do {
-                        cur++;
-                        skip_whitespace(text, cur);
-                } while(text[cur] == '\n');
-        }
-        text = text.substr(0, last);
-}
-void escape_json(std::string& text)
-{
-        std::string output;
-        for(char c : text)
-        {
-                switch(c) {
-                        case('\"'):
-                                output += "\\\"";
-                                break;
-                        case('\\'):
-                                output += "\\\\";
-                                break;
-                        case('\b'):
-                                output += "\\b";
-                                break;
-                        case('\f'):
-                                output += "\\f";
-                                break;
-                        case('\n'):
-                                output += "\\n";
-                                break;
-                        case('\r'):
-                                output += "\\r";
-                                break;
-                        case('\t'):
-                                output += "\\t";
-                                break;
-                        default:
-                                output += c;
-                }
-        }
-        text = output;
-}
-std::string base_model(const std::string& text)
-{
-        size_t start_name = text.find("FROM");
-        if(start_name == std::string::npos)
-                return std::string();
-        start_name += strlen("FROM");
-        skip_whitespace(text, start_name);
-        size_t end_name = start_name;
-        skip_non_whitespace(text, end_name);
-        return text.substr(start_name, end_name - start_name);
-}
+bool is_whitespace(char c);
+void skip_whitespace(const std::string& text, size_t& index);
+void skip_non_whitespace(const std::string& text, size_t& index);
+void trim_end(std::string& text);
+void escape_json(std::string& text);
+std::string base_model(const std::string& text);
+std::string substr(std::string& text, size_t start, size_t end);
+bool is_int(std::string& text);
+bool is_float(std::string& text);
 
-bool is_int(std::string& text)
-{
-        size_t i = text[0] == '-';
-        bool is_int = true;
-        while(i < text.size() && is_int) 
-                is_int = isdigit(text[i++]);
-        return is_int;
-}
-bool is_float(std::string& text)
-{
-        size_t i = text[0] == '-';
-        bool is_float = true, is_beg = true;
-        while(i < text.size() && is_float)
-        {
-                if(is_beg && text[i] == '.')
-                {
-                        is_beg = false;
-                }
-                else if(!isdigit(text[i]))
-                        is_float = false;
-                i++;
-        }
-        return is_float;
-}
+std::map<std::string, std::string> parse_params(const std::string& text);
 
 struct ParamType {
         enum param_type {null, integer, real, text} type;
@@ -152,73 +68,7 @@ struct ParamType {
                 return o;
         }
 };
-std::string substr(std::string& text, size_t start, size_t end)
-{
-        return text.substr(start, end - start);
-}
-std::map<std::string, ParamType> parse_param_types(std::string config)
-{
-        std::map<std::string, ParamType> types;
-        size_t i = 0;
-        while(i < config.size())
-        {
-                const size_t name_start = i;
-                skip_non_whitespace(config, i);
-                const size_t name_end = i;
-                skip_whitespace(config, i);
-                
-                const size_t type_start = i;
-                skip_non_whitespace(config, i);
-                const size_t type_end = i;
-
-                skip_whitespace(config, i);
-                
-                if(i >= config.size() || config[i] == '\n')
-                {
-                        i++; 
-                        types[substr(config, name_start, name_end)] =
-                                ParamType(substr(config, type_start, type_end), "");
-                        continue;
-                }
-                
-                const size_t desc_start = i;
-                while(i < config.size() && config[i] != '\n') i++;
-                const size_t desc_end = i++;
-                std::string type = substr(config, type_start, type_end);
-                std::string desc = substr(config, desc_start, desc_end);
-                ParamType pt = ParamType(type, desc);
-                types[substr(config, name_start, name_end)] = pt;
-                        
-        }
-        return types;
-}
-std::map<std::string, std::string> parse_params(const std::string& text)
-{
-        size_t index = 0;
-        std::map<std::string, std::string> params;
-        while(index < text.size())
-        {
-                index = text.find("PARAMETER", index);
-                if(index == std::string::npos)
-                        break;
-                index += strlen("PARAMETER");
-                skip_whitespace(text, index);
-                const size_t start_key = index;
-                skip_non_whitespace(text, index);
-                if(index >= text.size())
-                        break;
-                const size_t end_key = index;
-                skip_whitespace(text, index);
-                if(index >= text.size())
-                        break;
-                const size_t start_value = index;
-                skip_non_whitespace(text, index);  
-                if(index >= text.size())
-                        break;
-                params[text.substr(start_key, end_key - start_key)] = text.substr(start_value, index - start_value);
-        }
-        return params;
-}
+std::map<std::string, ParamType> parse_param_types(std::string config);
 struct BaseModel {
         std::string name, params, size;
         std::string to_string()
@@ -233,78 +83,9 @@ struct BaseModel {
                 return str;
         }
 };
-std::map<std::string, BaseModel> parse_base_models(std::string config)
-{
-        size_t i = 0;
-        std::map<std::string, BaseModel> map;
-        while(i < config.size())
-        {
-                size_t name_s = i;
-                skip_non_whitespace(config, i);
-                size_t name_e = i;
-                
-                skip_whitespace(config, i);
-                
-                size_t param_s = i;
-                skip_non_whitespace(config, i);
-                size_t param_e = i;
-                
-                skip_whitespace(config, i);
-
-                size_t size_s = i;
-                skip_non_whitespace(config, i);
-                size_t size_e = i;
-                
-                skip_whitespace(config, i);
-
-                BaseModel model;
-                model.name = substr(config, name_s, name_e);
-                model.params = substr(config, param_s, param_e);
-                model.size = substr(config, size_s, size_e);
-                map[model.name] = model;
-                i = config.find('\n', i);
-                i++;
-        }
-        return map;
-}
-std::string jsonify(std::map<std::string, ParamType>& ptypes)
-{
-        std::string json;
-        json += "[";
-        for(auto [name, ptype] : ptypes)
-        {
-                json += "{\"param_name\":\"";
-                json += name;
-                json += "\", \"type\":\"";
-                json += ptype.to_string();
-                json += "\", \"desc\":\"";
-                json += ptype.description;
-                json += "\"},\n";
-        }
-        if(ptypes.size() > 0)
-                json[json.size() - 2] = ' ';
-        json += "]\n";
-        return json;
-}
-std::string jsonify(std::map<std::string, BaseModel>& models)
-{
-        std::string json;
-        json += "[";
-        for(auto [name, model] : models)
-        {
-                json += "{\"model_name\":\"";
-                json += name;
-                json += "\", \"params\":\"";
-                json += model.params;
-                json += "\", \"size\":\"";
-                json += model.size;
-                json += "\"},\n";
-        }
-        if(models.size() > 0)
-                json[json.size() - 2] = ' ';
-        json += "]\n";
-        return json;
-}
+std::map<std::string, BaseModel> parse_base_models(std::string config);
+std::string jsonify(std::map<std::string, ParamType>& ptypes);
+std::string jsonify(std::map<std::string, BaseModel>& models);
 struct Model {
         std::string model_name = "test";
         std::string context;
@@ -475,6 +256,242 @@ int main(int argc, char** argv)
   svr.listen("0.0.0.0", 8080);
   
 }
+bool is_whitespace(char c)
+{
+        return c == ' ' || c == '\t';
+}
+void skip_whitespace(const std::string& text, size_t& index)
+{
+    while(text.size() > index && is_whitespace(text[index])) index++;
+}
+void skip_non_whitespace(const std::string& text, size_t& index)
+{
+    while(text.size() > index && text[index] != ' ' && text[index] != '\t' && text[index] != '\n') index++;
+}
+void trim_end(std::string& text)
+{
+        size_t last = 0, cur = 0;
+        while(cur < text.size())
+        {
+                skip_non_whitespace(text, cur);
+                last = cur;
+                do {
+                        cur++;
+                        skip_whitespace(text, cur);
+                } while(text[cur] == '\n');
+        }
+        text = text.substr(0, last);
+}
+void escape_json(std::string& text)
+{
+        std::string output;
+        for(char c : text)
+        {
+                switch(c) {
+                        case('\"'):
+                                output += "\\\"";
+                                break;
+                        case('\\'):
+                                output += "\\\\";
+                                break;
+                        case('\b'):
+                                output += "\\b";
+                                break;
+                        case('\f'):
+                                output += "\\f";
+                                break;
+                        case('\n'):
+                                output += "\\n";
+                                break;
+                        case('\r'):
+                                output += "\\r";
+                                break;
+                        case('\t'):
+                                output += "\\t";
+                                break;
+                        default:
+                                output += c;
+                }
+        }
+        text = output;
+}
+std::string base_model(const std::string& text)
+{
+        size_t start_name = text.find("FROM");
+        if(start_name == std::string::npos)
+                return std::string();
+        start_name += strlen("FROM");
+        skip_whitespace(text, start_name);
+        size_t end_name = start_name;
+        skip_non_whitespace(text, end_name);
+        return text.substr(start_name, end_name - start_name);
+}
+
+bool is_int(std::string& text)
+{
+        size_t i = text[0] == '-';
+        bool is_int = true;
+        while(i < text.size() && is_int) 
+                is_int = isdigit(text[i++]);
+        return is_int;
+}
+bool is_float(std::string& text)
+{
+        size_t i = text[0] == '-';
+        bool is_float = true, is_beg = true;
+        while(i < text.size() && is_float)
+        {
+                if(is_beg && text[i] == '.')
+                {
+                        is_beg = false;
+                }
+                else if(!isdigit(text[i]))
+                        is_float = false;
+                i++;
+        }
+        return is_float;
+}
+std::string substr(std::string& text, size_t start, size_t end)
+{
+        return text.substr(start, end - start);
+}
+std::map<std::string, ParamType> parse_param_types(std::string config)
+{
+        std::map<std::string, ParamType> types;
+        size_t i = 0;
+        while(i < config.size())
+        {
+                const size_t name_start = i;
+                skip_non_whitespace(config, i);
+                const size_t name_end = i;
+                skip_whitespace(config, i);
+                
+                const size_t type_start = i;
+                skip_non_whitespace(config, i);
+                const size_t type_end = i;
+
+                skip_whitespace(config, i);
+                
+                if(i >= config.size() || config[i] == '\n')
+                {
+                        i++; 
+                        types[substr(config, name_start, name_end)] =
+                                ParamType(substr(config, type_start, type_end), "");
+                        continue;
+                }
+                
+                const size_t desc_start = i;
+                while(i < config.size() && config[i] != '\n') i++;
+                const size_t desc_end = i++;
+                std::string type = substr(config, type_start, type_end);
+                std::string desc = substr(config, desc_start, desc_end);
+                ParamType pt = ParamType(type, desc);
+                types[substr(config, name_start, name_end)] = pt;
+                        
+        }
+        return types;
+}
+std::map<std::string, std::string> parse_params(const std::string& text)
+{
+        size_t index = 0;
+        std::map<std::string, std::string> params;
+        while(index < text.size())
+        {
+                index = text.find("PARAMETER", index);
+                if(index == std::string::npos)
+                        break;
+                index += strlen("PARAMETER");
+                skip_whitespace(text, index);
+                const size_t start_key = index;
+                skip_non_whitespace(text, index);
+                if(index >= text.size())
+                        break;
+                const size_t end_key = index;
+                skip_whitespace(text, index);
+                if(index >= text.size())
+                        break;
+                const size_t start_value = index;
+                skip_non_whitespace(text, index);  
+                if(index >= text.size())
+                        break;
+                params[text.substr(start_key, end_key - start_key)] = text.substr(start_value, index - start_value);
+        }
+        return params;
+}
+
+std::map<std::string, BaseModel> parse_base_models(std::string config)
+{
+        size_t i = 0;
+        std::map<std::string, BaseModel> map;
+        while(i < config.size())
+        {
+                size_t name_s = i;
+                skip_non_whitespace(config, i);
+                size_t name_e = i;
+                
+                skip_whitespace(config, i);
+                
+                size_t param_s = i;
+                skip_non_whitespace(config, i);
+                size_t param_e = i;
+                
+                skip_whitespace(config, i);
+
+                size_t size_s = i;
+                skip_non_whitespace(config, i);
+                size_t size_e = i;
+                
+                skip_whitespace(config, i);
+
+                BaseModel model;
+                model.name = substr(config, name_s, name_e);
+                model.params = substr(config, param_s, param_e);
+                model.size = substr(config, size_s, size_e);
+                map[model.name] = model;
+                i = config.find('\n', i);
+                i++;
+        }
+        return map;
+}
+std::string jsonify(std::map<std::string, ParamType>& ptypes)
+{
+        std::string json;
+        json += "[";
+        for(auto [name, ptype] : ptypes)
+        {
+                json += "{\"param_name\":\"";
+                json += name;
+                json += "\", \"type\":\"";
+                json += ptype.to_string();
+                json += "\", \"desc\":\"";
+                json += ptype.description;
+                json += "\"},\n";
+        }
+        if(ptypes.size() > 0)
+                json[json.size() - 2] = ' ';
+        json += "]\n";
+        return json;
+}
+std::string jsonify(std::map<std::string, BaseModel>& models)
+{
+        std::string json;
+        json += "[";
+        for(auto [name, model] : models)
+        {
+                json += "{\"model_name\":\"";
+                json += name;
+                json += "\", \"params\":\"";
+                json += model.params;
+                json += "\", \"size\":\"";
+                json += model.size;
+                json += "\"},\n";
+        }
+        if(models.size() > 0)
+                json[json.size() - 2] = ' ';
+        json += "]\n";
+        return json;
+}
+
 
 size_t now()
 {
