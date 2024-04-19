@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLAMA_BMCC Endpoint Tester</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>LLAMA_BMCC Endpoint Tester</h1>
+    <h2>/query Endpoint</h2>
+    <label for="prompt">Prompt:</label>
+    <input type="text" id="prompt" name="prompt">
+    <button onclick="getQueryResult()">Submit</button>
+    <p id="queryResult"></p>
+
+    <h2>/set_context Endpoint</h2>
+    <label for="ctx">Context:</label>
+    <textarea type="text" id="ctx" name="ctx"></textarea>
+    <button onclick="setContext()">Submit</button>
+    <p id="contextResult"></p>
+
+    <h2>/set_parameter Endpoint</h2>
+    <label for="key">Key:</label>
+    <input type="text" id="key" name="key">
+    <label for="value">Value:</label>
+    <input type="text" id="value" name="value">
+    <button onclick="setParameter()">Submit</button>
+    <p id="parameterResult"></p>
+
+    <h2>/set_base_model Endpoint</h2>
+    <label for="baseModel">Base Model:</label>
+    <input type="text" id="baseModel" name="baseModel">
+    <button onclick="setBaseModel()">Submit</button>
+    <p id="baseModelResult"></p>
+
+    <h2>/base_model_options Endpoint</h2>
+    <button onclick="getBaseModelOptions()">Get Base Model Options</button>
+    <div id="baseModelOptions"></div>
+
+    <h2>/model_parameter_options Endpoint</h2>
+    <button onclick="getModelParameterOptions()">Get Model Parameter Options</button>
+    <div id="modelParameterOptions"></div>
+
+    <script>
+        function getQueryResult() {
+            const prompt = document.getElementById('prompt').value;
+            fetch(`/query?prompt=${prompt}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('queryResult').textContent = data.data;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function setContext() {
+            const ctx = document.getElementById('ctx').value;
+            fetch(`/set_context?ctx=${ctx}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('contextResult').textContent = JSON.stringify(data);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function setParameter() {
+            const key = document.getElementById('key').value;
+            const value = document.getElementById('value').value;
+            fetch(`/set_parameter?key=${key}&value=${value}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('parameterResult').textContent = JSON.stringify(data);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function setBaseModel() {
+            const baseModel = document.getElementById('baseModel').value;
+            fetch(`/set_base_model?model=${baseModel}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('baseModelResult').textContent = JSON.stringify(data);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function getBaseModelOptions() {
+            fetch(`/base_model_options`)
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.createElement('table');
+                    const headers = Object.keys(data[0]);
+                    const headerRow = document.createElement('tr');
+                    headers.forEach(header => {
+                        const th = document.createElement('th');
+                        th.textContent = header;
+                        headerRow.appendChild(th);
+                    });
+                    table.appendChild(headerRow);
+
+                    data.forEach(entry => {
+                        const row = document.createElement('tr');
+                        headers.forEach(header => {
+                            const td = document.createElement('td');
+                            td.textContent = entry[header];
+                            row.appendChild(td);
+                        });
+                        table.appendChild(row);
+                    });
+
+                    document.getElementById('baseModelOptions').innerHTML = '';
+                    document.getElementById('baseModelOptions').appendChild(table);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function getModelParameterOptions() {
+            fetch(`/model_parameter_options`)
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.createElement('table');
+                    const headers = ['param_name', 'type', 'desc'];
+                    const headerRow = document.createElement('tr');
+                    headers.forEach(header => {
+                        const th = document.createElement('th');
+                        th.textContent = header;
+                        headerRow.appendChild(th);
+                    });
+                    table.appendChild(headerRow);
+
+                    data.forEach(entry => {
+                        const row = document.createElement('tr');
+                        headers.forEach(header => {
+                            const td = document.createElement('td');
+                            td.textContent = entry[header];
+                            row.appendChild(td);
+                        });
+                        table.appendChild(row);
+                    });
+
+                    document.getElementById('modelParameterOptions').innerHTML = '';
+                    document.getElementById('modelParameterOptions').appendChild(table);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
