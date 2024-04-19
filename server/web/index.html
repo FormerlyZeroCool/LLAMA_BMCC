@@ -120,16 +120,25 @@
                 })
                 .catch(error => console.error('Error:', error));
         }
+        let base_model_options_cache = [];
         function getBaseModelOptions() {
-            if(document.getElementById('baseModelOptions').innerHTML !== '')
-            {
+            if(document.getElementById('baseModelOptions').innerHTML !== '') {
                 document.getElementById('baseModelOptions').innerHTML = '';
                 return;
             }
+            if(base_model_options_cache.length > 0)
+                render_base_model_options(base_model_options_cache);
             fetch(`/base_model_options`)
                 .then(response => response.json())
                 .then(data => {
-                    const table = document.createElement('table');
+                    base_model_options_cache = data;
+                    render_base_model_options(data);
+                    })
+                .catch(error => console.error('Error:', error));
+        }
+        function render_base_model_options(data)
+        {
+            const table = document.createElement('table');
                     const headers = Object.keys(data[0]);
                     const headerRow = document.createElement('tr');
                     headers.forEach(header => {
@@ -150,19 +159,27 @@
 
                     document.getElementById('baseModelOptions').innerHTML = '';
                     document.getElementById('baseModelOptions').appendChild(table);
-                })
-                .catch(error => console.error('Error:', error));
+                
         }
+        let model_parameter_options_cache = [];
         function getModelParameterOptions() {
-            if(document.getElementById('modelParameterOptions').innerHTML != '')
-            {
+            if(document.getElementById('modelParameterOptions').innerHTML != '') {
                 document.getElementById('modelParameterOptions').innerHTML = '';
                 return;
             }
+            if(model_parameter_options_cache.length > 0)
+                render_parameter_options(model_parameter_options_cache);
+
             fetch(`/model_parameter_options`)
                 .then(response => response.json())
                 .then(data => {
-                    const table = document.createElement('table');
+                    model_parameter_options_cache = data;
+                    render_parameter_options(model_parameter_options_cache);
+                    })
+                .catch(error => console.error('Error:', error));
+        }
+        function render_parameter_options(data) {
+            const table = document.createElement('table');
                     const headers = ['param_name', 'type', 'desc'];
                     const headerRow = document.createElement('tr');
                     headers.forEach(header => {
@@ -184,8 +201,6 @@
 
                     document.getElementById('modelParameterOptions').innerHTML = '';
                     document.getElementById('modelParameterOptions').appendChild(table);
-                })
-                .catch(error => console.error('Error:', error));
         }
     </script>
 </body>
