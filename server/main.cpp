@@ -330,6 +330,8 @@ std::string base_model(const std::string& text)
 bool is_int(std::string& text)
 {
         size_t i = text[0] == '-';
+        if(i >= text.size())
+                return false;
         bool is_int = true;
         while(i < text.size() && is_int) 
                 is_int = isdigit(text[i++]);
@@ -338,6 +340,8 @@ bool is_int(std::string& text)
 bool is_float(std::string& text)
 {
         size_t i = text[0] == '-';
+        if(i >= text.size())
+                return false;
         bool is_float = true, is_beg = true;
         while(i < text.size() && is_float)
         {
