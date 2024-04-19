@@ -29,7 +29,7 @@ https://github.com/ollama/ollama/blob/main/docs/modelfile.md
   ```
 
 **Error Response:**
-- **Code:** 400 Bad Request 
+- **Code:** 200 OK 
 - **Content:** 
 ```javascript
   {
@@ -71,7 +71,7 @@ https://github.com/ollama/ollama/blob/main/docs/modelfile.md
   ```
 
 **Error Response:**
-- **Code:** 400 Bad Request 
+- **Code:** 200 OK 
 - **Content:** 
 ```javascript
   {
@@ -103,7 +103,7 @@ https://github.com/ollama/ollama/blob/main/docs/modelfile.md
 
 **Error Responses:**
 1. **Missing Parameter Key or Value:**
-   - **Code:** 400 Bad Request 
+   - **Code:** 200 OK 
    - **Content:** 
    ```javascript
      {
@@ -112,7 +112,7 @@ https://github.com/ollama/ollama/blob/main/docs/modelfile.md
      }
      ```
 2. **Invalid Key:**
-   - **Code:** 400 Bad Request 
+   - **Code:** 200 OK 
    - **Content:** 
    ```javascript
      {
@@ -121,7 +121,7 @@ https://github.com/ollama/ollama/blob/main/docs/modelfile.md
      }
      ```
 3. **Invalid Value for the Specified Key:**
-   - **Code:** 400 Bad Request 
+   - **Code:** 200 OK 
    - **Content:** 
    ```javascript
      {
@@ -175,7 +175,7 @@ This endpoint is responsible for setting the base model to be used by the system
 
 #### Error Responses:
 1. **Missing Parameter Model:**
-   - **Code:** 400 Bad Request
+   - **Code:** 200 OK
    - **Content:**
      ```json
      {
@@ -186,7 +186,7 @@ This endpoint is responsible for setting the base model to be used by the system
    - **Details:** This error occurs when the `model` parameter is not provided in the request. The parameter is mandatory for setting the base model.
 
 2. **Invalid Model Name:**
-   - **Code:** 400 Bad Request
+   - **Code:** 200 OK
    - **Content:**
      ```json
      {
