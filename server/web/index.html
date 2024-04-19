@@ -58,42 +58,60 @@
     <div id="modelParameterOptions"></div>
 
     <script>
+        let querying = false;
         function getQueryResult() {
+            if(querying)
+                return;
+            querying = true;
+            document.getElementById('queryResult').textContent = "Querying model, please await response.";
             const prompt = document.getElementById('prompt').value;
             fetch(`/query?prompt=${prompt}`)
                 .then(response => response.json())
                 .then(data => {
+                    querying = false;
                     document.getElementById('queryResult').textContent = data.data;
                 })
                 .catch(error => console.error('Error:', error));
         }
-
         function setContext() {
+            if(querying)
+                return;
+                querying = true;
+            document.getElementById('contextResult').textContent = "Loading...";
             const ctx = document.getElementById('ctx').value;
             fetch(`/set_context?ctx=${ctx}`)
                 .then(response => response.json())
                 .then(data => {
+                    querying = false;
                     document.getElementById('contextResult').textContent = JSON.stringify(data);
                 })
                 .catch(error => console.error('Error:', error));
         }
-
         function setParameter() {
+            if(querying)
+                return;
+            querying = true;
+            document.getElementById('parameterResult').textContent = "Loading...";
             const key = document.getElementById('key').value;
             const value = document.getElementById('value').value;
             fetch(`/set_parameter?key=${key}&value=${value}`)
                 .then(response => response.json())
                 .then(data => {
+                    querying = false;
                     document.getElementById('parameterResult').textContent = JSON.stringify(data);
                 })
                 .catch(error => console.error('Error:', error));
         }
-
         function setBaseModel() {
+            if(querying)
+                return;
+            querying = true;
+            document.getElementById('baseModelResult').textContent = "Loading...";
             const baseModel = document.getElementById('baseModel').value;
             fetch(`/set_base_model?model=${baseModel}`)
                 .then(response => response.json())
                 .then(data => {
+                    querying = false;
                     document.getElementById('baseModelResult').textContent = JSON.stringify(data);
                 })
                 .catch(error => console.error('Error:', error));
