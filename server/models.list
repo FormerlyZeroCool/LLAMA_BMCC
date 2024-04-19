@@ -1,5 +1,8 @@
+llama3 8B 4.7GB
 llama2 7B 3.8GB
+zephyr 7B 4.1GB
 mistral 7B 4.1GB
+wizardlm2 7B 4.1GB
 dolphin-phi 2.7B 1.6GB
 phi 2.7B 1.7GB
 neural-chat 7B 4.1GB
