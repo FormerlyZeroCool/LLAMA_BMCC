@@ -120,10 +120,8 @@
                 })
                 .catch(error => console.error('Error:', error));
         }
-        let show_base_model_options = false;
         function getBaseModelOptions() {
-            show_base_model_options = !show_base_model_options;
-            if(!show_base_model_options)
+            if(document.getElementById('baseModelOptions').innerHTML !== '')
             {
                 document.getElementById('baseModelOptions').innerHTML = '';
                 return;
@@ -140,7 +138,6 @@
                         headerRow.appendChild(th);
                     });
                     table.appendChild(headerRow);
-
                     data.forEach(entry => {
                         const row = document.createElement('tr');
                         headers.forEach(header => {
@@ -156,10 +153,8 @@
                 })
                 .catch(error => console.error('Error:', error));
         }
-        let show_model_parameter_options = false;
         function getModelParameterOptions() {
-            show_model_parameter_options = !show_model_parameter_options;
-            if(!show_model_parameter_options)
+            if(document.getElementById('modelParameterOptions').innerHTML != '')
             {
                 document.getElementById('modelParameterOptions').innerHTML = '';
                 return;
