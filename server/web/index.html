@@ -63,13 +63,17 @@
             if(querying)
                 return;
             querying = true;
+            let start_query = new Date();
             document.getElementById('queryResult').textContent = "Querying model, please await response.";
             const prompt = document.getElementById('prompt').value;
             fetch(`/query?prompt=${prompt}`)
                 .then(response => response.json())
                 .then(data => {
                     querying = false;
-                    document.getElementById('queryResult').textContent = data.data;
+                    let end_query = new Date();
+                    let time_elapsed = (end_query.getTime() - start_query.getTime()) / 1000;
+                    document.getElementById('queryResult').innerHTML = data.data + '<br> time elapsed: ' +
+                            time_elapsed + 's';
                 })
                 .catch(error => console.error('Error:', error));
         }
