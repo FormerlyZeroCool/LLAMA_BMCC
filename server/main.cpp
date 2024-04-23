@@ -7,6 +7,7 @@
 #include <map>
 #include <variant>
 #include <cctype>
+#include <sstream>
 
 
 //helper function prototypes
@@ -98,6 +99,24 @@ struct Model {
                 std::fstream file(filepath + PATH_SEPARATOR + model_name + ".conf", std::ios::out | std::ios::trunc);
                 file << to_string();
         }
+        bool set_param(std::string& key, std::string& value)
+        {
+                bool backup = parameters.count(key);
+                std::string value_bkp = parameters[key];
+                parameters[key] = value;
+
+                to_file();
+                auto res = load_ollama();
+                if(!res.first)
+                {
+                        if(backup)
+                                parameters[key] = value_bkp;
+                        else if(!backup)
+                                parameters.erase(key);
+                }
+
+                return res.first;
+        }
         std::string to_string() const
         {
                 std::string text;
@@ -117,7 +136,7 @@ struct Model {
                 text += "\"\"\"\n";
                 return text;
         }
-        void load_ollama() const
+        std::pair<bool, std::string> load_ollama() const
         {
                 std::string init_command = "ollama create ";
                 init_command += model_name;
@@ -126,8 +145,27 @@ struct Model {
                 init_command += PATH_SEPARATOR;
                 init_command += model_name;
                 init_command += ".conf";
-                std::cout<<init_command<<"\n";
-                std::system(init_command.c_str());
+
+                std::cout << init_command << "\n";
+                CrossPlatform::Unix_IPC ipc(init_command);
+                std::string output;
+                ipc.read_all(output);
+                std::cout<<"load output: "<<output<<'\n';
+                std::string error;
+                ipc.read_err(error);
+                auto rtn_code = ipc.close();
+                //std::cout<<rtn_code<<"\n";
+                if(rtn_code)
+                {
+                        //shitty recovery till I figure out why this fails
+                        //only on initial run
+                        //rtn_code = std::system(init_command.c_str());
+                        
+                        if(rtn_code)
+                                std::cout<<"errors from ollama loading model: "<<error<<"\n";
+                }
+
+                return std::make_pair(rtn_code, error);
         }
         void warm_up() const
         {
@@ -135,11 +173,24 @@ struct Model {
         }
         std::string run(std::string prompt) const
         {
-                std::string command = "ollama run test \"";
-                command += prompt;
-                command += "\" > model_output.txt";
-                std::system(command.c_str());
-                return readFile("model_output.txt");
+                try{
+                        CrossPlatform::Unix_IPC ipc("ollama run test --nowordwrap");
+                        ipc.write(prompt);
+                        std::string result;
+                        ipc.read_all(result);
+                        if(ipc.close() != 0)
+                        {
+                                std::string error;
+                                ipc.read_err(error);
+                                std::cout<<"errors from ollama: "<<error<<"\n";
+                        }
+                        return result;
+                }
+                catch(char const* err)
+                {
+                        std::cerr<<err<<"\n";
+                }
+                return "error";
         }
 };
 Model load_model_conf(std::string model_name, std::string filepath);
@@ -149,13 +200,11 @@ int main(int argc, char** argv)
   srand(now());
 
   std::cout << "starting server..." << std::endl;
-
-  size_t file_index = 1;
+  //setup initial datastructures
   auto type_map = parse_param_types(readFile("./params.types"));
   auto base_models = parse_base_models(readFile("./models.list"));
-  std::string model_name = argc > 2 ? argv[file_index++] : "test";
   Model model = load_model_conf("test", std::string(".."));
-
+  model.to_file();
   model.load_ollama();
   model.warm_up();
   httplib::Server svr;
@@ -187,7 +236,11 @@ int main(int argc, char** argv)
     }
     model.context = req.get_param_value("ctx");
     model.to_file();
-    model.load_ollama();
+    auto result = model.load_ollama();
+    if(!result.first)
+    {
+        res.set_content("{\"error\":\"" + result.second +  "\", \"success\":false}\n", "text/json");
+    }
     model.warm_up();
     res.set_content("{\"error\":\"\", \"success\":true}\n", "text/json");
   });
@@ -210,10 +263,8 @@ int main(int argc, char** argv)
                 return;
         }
         std::cout << "updating param: " << key << " which is of type: " << type_map[key] << " with value: " << value << "\n";
-        model.parameters[req.get_param_value("key")] = req.get_param_value("value");
         
-        model.to_file();
-        model.load_ollama();
+        model.set_param(key, value);
         model.warm_up();
 
         res.set_content("{\"error\":\"\", \"success\":true}\n", "text/json");
