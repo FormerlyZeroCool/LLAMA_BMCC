@@ -2,7 +2,7 @@
 
 A webservice front end to Meta's ollama tool to get large language models running on your machine
 The service provides a means to query a language model, change the starting context, and parameters.
-For more information on ollama check outtheir github repo, and documentation.
+For more information on ollama check out their github repo, and documentation. 
 
 repo:
 https://github.com/ollama/ollama/tree/main
